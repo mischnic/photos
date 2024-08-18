@@ -14,6 +14,7 @@ html {
   -webkit-text-size-adjust: 100%;
 
   height: 100%;
+  overflow: hidden;
 }
 /* * {
   box-sizing: border-box;
@@ -35,26 +36,24 @@ body,
 .root-grid {
   flex-grow: 1;
 }
-.root-grid .grid-row {
-  display: grid;
-  overflow: hidden;
+/* .root-grid .grid-row {
   gap: 2px;
-  grid-template-columns: repeat(var(--col-count), 1fr);
-}
-.root-grid .grid-item > * {
-  min-height: 0;
-}
-.root-grid .grid-item img {
+} */
+.img-fit {
   display: block;
   width: 100%;
-  height: 100%;
   object-fit: contain;
-}
-.root-grid .grid-item {
+  /* height: 100%; */
+  flex-basis: 0;
+  flex-grow: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
 }
+
+/* .root-grid .grid-item { */
+/* min-height: 0; */
+/* display: flex;
+  flex-direction: column; */
+/* } */
 
 /* ---------- */
 

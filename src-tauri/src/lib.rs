@@ -1,6 +1,7 @@
-use std::path::Path;
+use std::{borrow::Cow, path::Path};
 
-use tauri::http;
+use tauri::{http, AppHandle};
+use tauri_plugin_dialog::DialogExt;
 
 pub fn is_supported_photo_extension(extension: &str) -> bool {
     match &*extension.to_ascii_lowercase() {
@@ -18,6 +19,15 @@ pub fn parse_photo_mime_type(uri: &str) -> &'static str {
         }
     }
     "application/octet-stream"
+}
+
+#[tauri::command]
+async fn pick_folder(app: AppHandle) -> Result<Option<String>, String> {
+    Ok(app
+        .dialog()
+        .file()
+        .blocking_pick_folder()
+        .map(|p| p.to_str().unwrap().to_string()))
 }
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -73,15 +83,20 @@ fn generate_thumbnail(input_path: &str) -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![list_files])
+        .plugin(tauri_plugin_dialog::init())
+        .invoke_handler(tauri::generate_handler![list_files, pick_folder])
         .register_asynchronous_uri_scheme_protocol("photo", |_app, request, responder| {
             std::thread::spawn(move || {
                 let path = request.uri().path();
                 let query = request.uri().query().unwrap_or_default();
 
-                let thumbnail = generate_thumbnail(path);
+                let file = if query == "thumbnail" {
+                    Cow::Owned(generate_thumbnail(path))
+                } else {
+                    Cow::Borrowed(path)
+                };
 
-                if let Ok(data) = std::fs::read(thumbnail) {
+                if let Ok(data) = std::fs::read(&*file) {
                     responder.respond(
                         http::Response::builder()
                             .header(http::header::CONTENT_TYPE, parse_photo_mime_type(path))

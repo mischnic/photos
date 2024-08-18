@@ -1,101 +1,80 @@
-import { type ComponentType, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { FixedSizeList, ListChildComponentProps } from "react-window";
-import AutoSizer from "react-virtualized-auto-sizer";
+import "@radix-ui/themes/styles.css";
 
 import "./App.css";
+import { Button, Flex } from "@radix-ui/themes";
+import { PhotoGrid } from "./PhotoGrid";
+import { PhotoFilmStrip } from "./PhotoFilmStrip";
+import { useAtom, useSetAtom } from "jotai";
+import { filesAtom, projectAtom, viewAtom } from "./state";
+import { useKeyPressEvent } from "react-use";
+import { PhotoSingle } from "./PhotoSingle";
 
-const Cell = ({ file }: { file: string }) => {
-  return (
-    <div className="grid-item">
-      <div>
-        <img
-          src={`photo://localhost${file}?thumbnail`}
-          width="6000"
-          height="4000"
-        />
-      </div>
-      <div>{file.slice(-10)}</div>
-    </div>
-  );
-  // <div style={style}>
-  //   Item {rowIndex},{columnIndex}
-  // </div>
-};
+function listFiles(folder: string): Promise<Array<string>> {
+  return invoke("list_files", {
+    path: folder,
+  });
+}
 
-const Row: ComponentType<
-  ListChildComponentProps<{ files: Array<string>; columnCount: number }>
-> = ({ index, style, data: { files, columnCount } }) => {
-  let row = files.slice(index * columnCount, index * columnCount + columnCount);
-  return (
-    <div style={style} className="grid-row">
-      {row.map((f) => (f ? <Cell file={f} key={f} /> : <div></div>))}
-    </div>
-  );
-  // <div style={style}>
-  //   Item {rowIndex},{columnIndex}
-  // </div>
+function pickFolder(): Promise<string | null> {
+  return invoke("pick_folder");
+}
+
+const DigitViewMapping = {
+  Digit1: "single",
+  Digit2: "filmstrip",
+  Digit3: "grid",
 };
 
 function App() {
-  const [files, setFiles] = useState<Array<string>>([]);
+  let [folder, setFolder] = useAtom(projectAtom); // "/Users/niklas/Downloads/100_FUJI/"
+  let [view, setView] = useAtom(viewAtom);
+  const [files, setFiles] = useAtom(filesAtom);
+
+  useKeyPressEvent(
+    (e) => e.code in DigitViewMapping,
+    (e) => {
+      if (e.metaKey) {
+        // @ts-ignore
+        setView(DigitViewMapping[e.code] as View);
+      }
+    }
+  );
 
   useEffect(() => {
     (async () => {
-      // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-      console.log("list");
-      setFiles(
-        await invoke("list_files", {
-          path: "/Users/niklas/Downloads/100_FUJI/",
-        })
-      );
+      if (folder) {
+        setFiles(await listFiles(folder));
+      }
     })();
-  }, []);
+  }, [folder]);
 
-  let files2 = files.slice(110, 116);
+  if (!folder) {
+    return (
+      <Flex direction="column" align="center" justify="center" flexGrow="1">
+        <Button
+          onClick={async () => {
+            let path = await pickFolder();
+            if (path) {
+              setFolder(path);
+            }
+          }}
+        >
+          Select project
+        </Button>
+      </Flex>
+    );
+  }
 
-  return (
-    <>
-      {/* <img src="photo://localhost/Users/niklas/Downloads/100_FUJI/DSCF0124.JPG" /> */}
-
-      <AutoSizer>
-        {({ height, width }) => {
-          let columnCount = Math.floor(width / 350);
-          let rowHeight = (width / columnCount) * (2 / 3) + 70;
-          console.log(
-            width / columnCount,
-            (width / columnCount) * (2 / 3),
-            rowHeight
-          );
-          return (
-            <FixedSizeList
-              itemSize={rowHeight}
-              itemCount={Math.ceil(files2.length / columnCount)}
-              height={height}
-              width={width}
-              className="root-grid"
-              itemData={{ files: files2, columnCount }}
-              // @ts-ignore
-              style={{ "--col-count": columnCount }}
-            >
-              {Row}
-            </FixedSizeList>
-          );
-        }}
-      </AutoSizer>
-
-      {/* <div className="grid">
-        {files.slice(110, 114).map((f) => (
-          <div key={f}>
-            <div>
-              <img src={`photo://localhost${f}`} width="6000" height="4000" />
-            </div>
-            <div>{f.slice(-10)}</div>
-          </div>
-        ))}
-      </div> */}
-    </>
-  );
+  if (!files) {
+  } else if (view === "grid") {
+    return <PhotoGrid />;
+  } else if (view === "filmstrip") {
+    return <PhotoFilmStrip />;
+  } else {
+    return <PhotoSingle />;
+  }
 }
 
 export default App;
