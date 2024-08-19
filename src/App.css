@@ -16,9 +16,6 @@ html {
   height: 100%;
   overflow: hidden;
 }
-/* * {
-  box-sizing: border-box;
-} */
 
 html,
 body,
@@ -33,45 +30,12 @@ body,
   flex-direction: column;
 }
 
-.root-grid {
-  flex-grow: 1;
-}
-/* .root-grid .grid-row {
-  gap: 2px;
-} */
 .img-fit {
   display: block;
   width: 100%;
   object-fit: contain;
-  /* height: 100%; */
+  height: 100%;
   flex-basis: 0;
   flex-grow: 1;
   min-height: 0;
 }
-
-/* .root-grid .grid-item { */
-/* min-height: 0; */
-/* display: flex;
-  flex-direction: column; */
-/* } */
-
-/* ---------- */
-
-/* .grid {
-  display: grid;
-  overflow: hidden;
-
-  gap: 2px;
-
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.grid > * {
-}
-
-.grid img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-} */

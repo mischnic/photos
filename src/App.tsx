@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "@radix-ui/themes/styles.css";
 
@@ -7,9 +7,10 @@ import { Button, Flex } from "@radix-ui/themes";
 import { PhotoGrid } from "./PhotoGrid";
 import { PhotoFilmStrip } from "./PhotoFilmStrip";
 import { useAtom, useSetAtom } from "jotai";
-import { filesAtom, projectAtom, viewAtom } from "./state";
+import { filesAtom, projectAtom, selectedIndexAtom, viewAtom } from "./state";
 import { useKeyPressEvent } from "react-use";
 import { PhotoSingle } from "./PhotoSingle";
+import { useKeyPress } from "./utils";
 
 function listFiles(folder: string): Promise<Array<string>> {
   return invoke("list_files", {
@@ -28,8 +29,9 @@ const DigitViewMapping = {
 };
 
 function App() {
-  let [folder, setFolder] = useAtom(projectAtom); // "/Users/niklas/Downloads/100_FUJI/"
+  let [folder, setFolder] = useAtom(projectAtom);
   let [view, setView] = useAtom(viewAtom);
+  let setSelectedIndex = useSetAtom(selectedIndexAtom);
   const [files, setFiles] = useAtom(filesAtom);
 
   useKeyPressEvent(
@@ -41,6 +43,13 @@ function App() {
       }
     }
   );
+
+  useKeyPress("ArrowLeft", () => {
+    setSelectedIndex((i) => Math.max(0, i - 1));
+  });
+  useKeyPress("ArrowRight", () => {
+    setSelectedIndex((i) => Math.min(files?.length ?? Infinity, i + 1));
+  });
 
   useEffect(() => {
     (async () => {

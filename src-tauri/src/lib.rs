@@ -1,7 +1,10 @@
-use std::{borrow::Cow, path::Path};
+use std::borrow::Cow;
 
 use tauri::{http, AppHandle};
 use tauri_plugin_dialog::DialogExt;
+use thumbnails::generate_thumbnail;
+
+mod thumbnails;
 
 pub fn is_supported_photo_extension(extension: &str) -> bool {
     match &*extension.to_ascii_lowercase() {
@@ -53,30 +56,6 @@ fn list_files(path: &str) -> Result<Vec<String>, String> {
     entries.sort();
 
     Ok(entries)
-}
-
-fn generate_thumbnail(input_path: &str) -> String {
-    // use imageproc::geometric_transformations::*;
-    use imageproc::image::imageops::thumbnail;
-    use imageproc::image::open;
-    // use imageproc::image::save_buffer_with_format;
-
-    let thumbnail_path = Path::new(input_path).with_extension("thumb.jpeg");
-    if !thumbnail_path.exists() {
-        println!("1 generate_thumbnail");
-        let image = open(input_path)
-            .unwrap_or_else(|_| panic!("Could not load image at {:?}", input_path))
-            .to_rgb8();
-
-        println!("2 generate_thumbnail");
-
-        // let scale = Projection::scale(2.0, 3.0);
-        // let thumbnail_img = warp(&image, &scale, Interpolation::Bilinear, Rgb([255, 0, 0]));
-        let thumbnail_img = thumbnail(&image, 6000 / 4, 4000 / 4);
-
-        thumbnail_img.save(&thumbnail_path).unwrap();
-    }
-    thumbnail_path.to_str().unwrap().to_string()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
