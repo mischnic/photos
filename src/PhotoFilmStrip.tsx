@@ -1,10 +1,10 @@
 import { createRef, useLayoutEffect, type ComponentType } from "react";
 import { FixedSizeList, ListChildComponentProps } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
-import { GRID_TITLE_HEIGHT, GridCell } from "./PhotoGrid";
 import { PhotoSingle } from "./PhotoSingle";
 import { useAtomValue } from "jotai";
 import { filesAtom, selectedIndexAtom } from "./state";
+import { CELL_TITLE_HEIGHT, PhotoCell } from "./PhotoCell";
 
 const STRIP_HEIGHT = 100;
 const STRIP_PADDING = 10;
@@ -16,7 +16,7 @@ const StripCell: ComponentType<ListChildComponentProps> = ({
   const files = useAtomValue(filesAtom)!;
   let f = files[index];
   return (
-    <GridCell index={index} file={f} style={style} px={`${STRIP_PADDING}px`} />
+    <PhotoCell index={index} file={f} style={style} px={`${STRIP_PADDING}px`} />
   );
 };
 
@@ -31,7 +31,7 @@ export function PhotoFilmStrip() {
   }, [selectedIndex]);
 
   let itemWidth =
-    STRIP_HEIGHT * (3 / 2) + GRID_TITLE_HEIGHT + STRIP_PADDING * 2;
+    STRIP_HEIGHT * (3 / 2) + CELL_TITLE_HEIGHT + STRIP_PADDING * 2;
   return (
     <>
       <PhotoSingle />

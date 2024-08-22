@@ -7,14 +7,18 @@ use img_parts::ImageEXIF;
 // use imageproc::image::save_buffer_with_format;
 
 pub(crate) fn generate_thumbnail(input_path: &str) -> String {
-    let thumbnail_path = Path::new(input_path).with_extension("thumb.jpeg");
+    let input_path = Path::new(input_path);
+    let thumbnail_folder = input_path.parent().unwrap().join(".thumbs");
+    let thumbnail_path = thumbnail_folder
+        .join(Path::new(input_path.file_name().unwrap()).with_extension("thumb.jpeg"));
     if !thumbnail_path.exists() {
-        println!("1 generate_thumbnail {}", input_path);
+        std::fs::create_dir_all(thumbnail_folder).unwrap();
+        println!("1 generate_thumbnail {}", input_path.display());
         let image = open(input_path)
             .unwrap_or_else(|_| panic!("Could not load image at {:?}", input_path))
             .to_rgb8();
 
-        println!("2 generate_thumbnail {}", input_path);
+        println!("2 generate_thumbnail {}", input_path.display());
 
         let exif = {
             let file = std::fs::File::open(input_path).unwrap();
@@ -23,14 +27,14 @@ pub(crate) fn generate_thumbnail(input_path: &str) -> String {
             exifreader.read_from_container(&mut bufreader).unwrap()
         };
 
-        println!("3 generate_thumbnail {}", input_path);
+        println!("3 generate_thumbnail {}", input_path.display());
 
         // project
 
         // let scale = Projection::scale(2.0, 3.0);
         // let thumbnail_img = warp(&image, &scale, Interpolation::Bilinear, Rgb([255, 0, 0]));
         let thumbnail_img_buffer = thumbnail(&image, 6000 / 4, 4000 / 4);
-        println!("4 generate_thumbnail {}", input_path);
+        println!("4 generate_thumbnail {}", input_path.display());
 
         let mut bytes: Vec<u8> = Vec::new();
         thumbnail_img_buffer

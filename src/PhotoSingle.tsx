@@ -14,23 +14,27 @@ export function PhotoSingle() {
     if (transform != "") {
       setTransform("");
     } else {
-      let imageDisplayWidth = imageRef.current!.width;
-      let imageDisplayHeight = imageRef.current!.height;
-      let elementRect = imageRef.current!.getBoundingClientRect();
-      let mouseX = mousePosition.current!.x;
-      let mouseY = mousePosition.current!.y;
-
-      let xRelative = imageDisplayWidth / 2 - (mouseX - elementRect.x);
-      let yRelative = imageDisplayHeight / 2 - (mouseY - elementRect.y);
-
       let imageNaturalWidth = imageRef.current!.naturalWidth;
       let imageNaturalHeight = imageRef.current!.naturalHeight;
-      let scale =
-        1 +
-        Math.max(imageNaturalWidth, imageNaturalHeight) /
-          Math.max(imageDisplayWidth, imageDisplayHeight); /* *
+      if (imageNaturalWidth != 0 && imageNaturalHeight != 0) {
+        let imageDisplayWidth = imageRef.current!.width;
+        let imageDisplayHeight = imageRef.current!.height;
+        let elementRect = imageRef.current!.getBoundingClientRect();
+        let mouseX = mousePosition.current!.x;
+        let mouseY = mousePosition.current!.y;
+
+        let xRelative = imageDisplayWidth / 2 - (mouseX - elementRect.x);
+        let yRelative = imageDisplayHeight / 2 - (mouseY - elementRect.y);
+
+        let scale =
+          1 +
+          Math.max(imageNaturalWidth, imageNaturalHeight) /
+            Math.max(imageDisplayWidth, imageDisplayHeight); /* *
         window.devicePixelRatio */
-      setTransform(`scale(${scale}) translate(${xRelative}px, ${yRelative}px)`);
+        setTransform(
+          `scale(${scale}) translate(${xRelative}px, ${yRelative}px)`
+        );
+      }
     }
   });
 
@@ -43,6 +47,10 @@ export function PhotoSingle() {
       style={{
         transform,
         overflow: "hidden",
+        backgroundImage: `url(photo://localhost${file}?thumbnail)`,
+        backgroundSize: "contain",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
       }}
       onMouseMove={(e) => {
         mousePosition.current = { x: e.clientX, y: e.clientY };
