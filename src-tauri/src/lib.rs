@@ -13,8 +13,8 @@ pub fn is_supported_photo_extension(extension: &str) -> bool {
     }
     false
 }
-pub fn parse_photo_mime_type(uri: &str) -> &'static str {
-    if let Some(suffix) = uri.split('.').last() {
+pub fn parse_photo_mime_type(uri: impl AsRef<str>) -> &'static str {
+    if let Some(suffix) = uri.as_ref().split('.').last() {
         match &*suffix.to_ascii_lowercase() {
             "jpg" | "jpeg" => return "image/jpeg",
             "hif" | "heif" => return "image/heif",
@@ -26,11 +26,13 @@ pub fn parse_photo_mime_type(uri: &str) -> &'static str {
 
 #[tauri::command]
 async fn pick_folder(app: AppHandle) -> Result<Option<String>, String> {
-    Ok(app
-        .dialog()
-        .file()
-        .blocking_pick_folder()
-        .map(|p| p.to_str().unwrap().to_string()))
+    let Some(filepath) = app.dialog().file().blocking_pick_folder() else {
+        return Ok(None);
+    };
+
+    Ok(Some(
+        filepath.into_path().unwrap().to_str().unwrap().to_string(),
+    ))
 }
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -66,19 +68,19 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![list_files, pick_folder])
         .register_asynchronous_uri_scheme_protocol("photo", |_app, request, responder| {
             std::thread::spawn(move || {
-                let path = request.uri().path();
+                let path = urlencoding::decode(request.uri().path()).expect("UTF-8");
                 let query = request.uri().query().unwrap_or_default();
 
                 let file = if query == "thumbnail" {
                     Cow::Owned(generate_thumbnail(path))
                 } else {
-                    Cow::Borrowed(path)
+                    path
                 };
 
                 if let Ok(data) = std::fs::read(&*file) {
                     responder.respond(
                         http::Response::builder()
-                            .header(http::header::CONTENT_TYPE, parse_photo_mime_type(path))
+                            .header(http::header::CONTENT_TYPE, parse_photo_mime_type(file))
                             .body(data)
                             .unwrap(),
                     );

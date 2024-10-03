@@ -6,8 +6,8 @@ use imageproc::image::{open, ImageFormat};
 use img_parts::ImageEXIF;
 // use imageproc::image::save_buffer_with_format;
 
-pub(crate) fn generate_thumbnail(input_path: &str) -> String {
-    let input_path = Path::new(input_path);
+pub(crate) fn generate_thumbnail(input_path: impl AsRef<str>) -> String {
+    let input_path = Path::new(input_path.as_ref());
     let thumbnail_folder = input_path.parent().unwrap().join(".thumbs");
     let thumbnail_path = thumbnail_folder
         .join(Path::new(input_path.file_name().unwrap()).with_extension("thumb.jpeg"));
